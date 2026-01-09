@@ -1,0 +1,7 @@
+[
+  {
+    "directory": "/Users/paul/personal/3d-raytracer-c",
+    "command": "clang -std=c17 -Wall -Wextra -Wpedantic -I/opt/homebrew/include -c main.c",
+    "file": "main.c"
+  }
+]
