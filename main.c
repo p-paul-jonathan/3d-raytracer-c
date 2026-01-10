@@ -1,30 +1,20 @@
 #define SDL_MAIN_USE_CALLBACKS 1
+
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
+#include <SDL3/SDL_scancode.h>
 
-#include <math.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
 
 #include "lib/camera.h"
+#include "lib/constants.h"
 #include "lib/light.h"
 #include "lib/raytracer.h"
 #include "lib/scene.h"
 #include "lib/sphere.h"
 #include "lib/vector_3d.h"
-
-#define WINDOW_WIDTH 960
-#define WINDOW_HEIGHT 540
-
-#define VIEWPORT_WIDTH 1.6
-#define VIEWPORT_HEIGHT 0.9
-#define VIEWPORT_DISTANCE 1
-
-#define MAX_RENDER_DISTANCE INFINITY
-#define MIN_RENDER_DISTANCE 1
-
-#define DEFAULT_BACKGROUND_COLOR 0xFF000000
 
 static SDL_Window *window = NULL;
 static SDL_Renderer *renderer = NULL;
@@ -35,23 +25,23 @@ static uint32_t *framebuffer = NULL;
 static Camera *camera = NULL;
 static Scene *scene = NULL;
 
-static inline void clear_frame_buffer(uint32_t color) {
-  size_t pixel_count = (size_t)WINDOW_WIDTH * WINDOW_HEIGHT;
-  for (size_t i = 0; i < pixel_count; i++) {
+static uint64_t last_ticks = 0;
+
+static inline void clear_framebuffer(uint32_t color) {
+  size_t count = (size_t)WINDOW_WIDTH * WINDOW_HEIGHT;
+  for (size_t i = 0; i < count; i++) {
     framebuffer[i] = color;
   }
 }
 
-static inline void initialize_camera_and_scene(void) {
+static void initialize_camera(void) {
   camera = malloc(sizeof(Camera));
-  scene = malloc(sizeof(Scene));
-
-  if (!camera || !scene) {
+  if (!camera) {
     SDL_Log("Out of memory");
     exit(1);
   }
 
-  camera->position = (Vector3D){0, 0, -2};
+  camera->position = (Vector3D){0.0f, 0.0f, -2.0f};
 
   camera->width = WINDOW_WIDTH;
   camera->height = WINDOW_HEIGHT;
@@ -60,8 +50,28 @@ static inline void initialize_camera_and_scene(void) {
   camera->viewport_height = VIEWPORT_HEIGHT;
   camera->viewport_distance = VIEWPORT_DISTANCE;
 
-  camera->min_render_distance = MIN_RENDER_DISTANCE;
-  camera->max_render_distance = MAX_RENDER_DISTANCE;
+  camera->ray_t_min = RAY_T_MIN;
+  camera->ray_t_max = RAY_T_MAX;
+
+  camera->yaw = 0.0f;
+  camera->pitch = 0.0f;
+  camera->roll = 0.0f;
+
+  camera->pitch_range = MATH_PI / 3.0f; /* ±60° */
+  camera->roll_range = MATH_PI / 4.0f;  /* ±45° */
+
+  camera->move_speed = CAMERA_MOVE_SPEED;
+  camera->rotate_speed = CAMERA_ROTATE_SPEED;
+
+  camera_update_orientation(camera);
+}
+
+static void initialize_scene(void) {
+  scene = malloc(sizeof(Scene));
+  if (!scene) {
+    SDL_Log("Out of memory");
+    exit(1);
+  }
 
   scene->spheres_count = 4;
   scene->spheres = malloc(sizeof(Sphere) * scene->spheres_count);
@@ -69,34 +79,63 @@ static inline void initialize_camera_and_scene(void) {
     SDL_Log("Out of memory");
     exit(1);
   }
+
   scene->spheres[0] = (Sphere){(Vector3D){0, -1, 3}, 1, 0xFFFF0000};
   scene->spheres[1] = (Sphere){(Vector3D){2, 0, 4}, 1, 0xFF0000FF};
   scene->spheres[2] = (Sphere){(Vector3D){-2, 0, 4}, 1, 0xFF00FF00};
   scene->spheres[3] = (Sphere){(Vector3D){0, -5001, 0}, 5000, 0xFFFFFF00};
 
   scene->lights_count = 1;
-  scene->lights = malloc(sizeof(Light) * scene->lights_count);
+  scene->lights = malloc(sizeof(Light));
   if (!scene->lights) {
     SDL_Log("Out of memory");
     exit(1);
   }
-  scene->lights[0] = (Light){0.2, AMBIENT, (Vector3D){0, 0, 0}};
 
+  scene->lights[0] = (Light){0.2f, AMBIENT, (Vector3D){0, 0, 0}};
   scene->default_background_color = DEFAULT_BACKGROUND_COLOR;
 }
 
+static void handle_camera_input(Camera *camera, const bool *keys, float move,
+                                float rotate) {
+  if (keys[SDL_SCANCODE_W])
+    camera_move_front(camera, move);
+  if (keys[SDL_SCANCODE_S])
+    camera_move_back(camera, move);
+  if (keys[SDL_SCANCODE_A])
+    camera_move_left(camera, move);
+  if (keys[SDL_SCANCODE_D])
+    camera_move_right(camera, move);
+  if (keys[SDL_SCANCODE_K])
+    camera_move_up(camera, move);
+  if (keys[SDL_SCANCODE_J])
+    camera_move_down(camera, move);
+
+  if (keys[SDL_SCANCODE_UP])
+    camera_pitch_up(camera, rotate);
+  if (keys[SDL_SCANCODE_DOWN])
+    camera_pitch_down(camera, rotate);
+  if (keys[SDL_SCANCODE_LEFT])
+    camera_yaw_left(camera, rotate);
+  if (keys[SDL_SCANCODE_RIGHT])
+    camera_yaw_right(camera, rotate);
+  if (keys[SDL_SCANCODE_Q])
+    camera_roll_left(camera, rotate);
+  if (keys[SDL_SCANCODE_E])
+    camera_roll_right(camera, rotate);
+}
+
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
-  SDL_SetAppMetadata("3D Raytracing", "1.0", "com.example.raytracer");
+  SDL_SetAppMetadata("Raytracer", "1.0", "com.example.raytracer");
 
   if (!SDL_Init(SDL_INIT_VIDEO)) {
     SDL_Log("SDL_Init failed: %s", SDL_GetError());
     return SDL_APP_FAILURE;
   }
 
-  if (!SDL_CreateWindowAndRenderer("Framebuffer Renderer", WINDOW_WIDTH,
-                                   WINDOW_HEIGHT, SDL_WINDOW_RESIZABLE, &window,
-                                   &renderer)) {
-    SDL_Log("Window/Renderer creation failed: %s", SDL_GetError());
+  if (!SDL_CreateWindowAndRenderer("Raytracer", WINDOW_WIDTH, WINDOW_HEIGHT,
+                                   SDL_WINDOW_RESIZABLE, &window, &renderer)) {
+    SDL_Log("Window creation failed: %s", SDL_GetError());
     return SDL_APP_FAILURE;
   }
 
@@ -107,21 +146,18 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
                               SDL_TEXTUREACCESS_STREAMING, WINDOW_WIDTH,
                               WINDOW_HEIGHT);
 
-  if (!texture) {
-    SDL_Log("Texture creation failed: %s", SDL_GetError());
-    return SDL_APP_FAILURE;
-  }
-
   framebuffer = malloc(sizeof(uint32_t) * WINDOW_WIDTH * WINDOW_HEIGHT);
   if (!framebuffer) {
     SDL_Log("Framebuffer allocation failed");
     return SDL_APP_FAILURE;
   }
 
-  initialize_camera_and_scene();
+  initialize_camera();
+  initialize_scene();
 
-  clear_frame_buffer(scene->default_background_color);
+  clear_framebuffer(scene->default_background_color);
 
+  last_ticks = SDL_GetTicks();
   return SDL_APP_CONTINUE;
 }
 
@@ -133,7 +169,18 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
 }
 
 SDL_AppResult SDL_AppIterate(void *appstate) {
-  clear_frame_buffer(scene->default_background_color);
+  uint64_t now = SDL_GetTicks();
+  float delta_time = (now - last_ticks) / 1000.0f;
+  last_ticks = now;
+
+  const bool *keys = SDL_GetKeyboardState(NULL);
+
+  handle_camera_input(camera, keys, camera->move_speed * delta_time,
+                      camera->rotate_speed * delta_time);
+
+  camera_update_orientation(camera);
+
+  clear_framebuffer(scene->default_background_color);
 
   main_raytracer(scene, camera, framebuffer);
 
@@ -148,21 +195,7 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
 }
 
 void SDL_AppQuit(void *appstate, SDL_AppResult result) {
-  if (framebuffer) {
-    free(framebuffer);
-  }
-
-  if (texture) {
-    SDL_DestroyTexture(texture);
-  }
-
-  if (renderer) {
-    SDL_DestroyRenderer(renderer);
-  }
-
-  if (window) {
-    SDL_DestroyWindow(window);
-  }
+  free(framebuffer);
 
   if (scene) {
     free(scene->spheres);
@@ -170,9 +203,10 @@ void SDL_AppQuit(void *appstate, SDL_AppResult result) {
     free(scene);
   }
 
-  if (camera) {
-    free(camera);
-  }
+  free(camera);
 
+  SDL_DestroyTexture(texture);
+  SDL_DestroyRenderer(renderer);
+  SDL_DestroyWindow(window);
   SDL_Quit();
 }

@@ -18,6 +18,6 @@ typedef struct {
 
 SphereIntersections calculate_sphere_intersection(Camera *camera,
                                                   Sphere *sphere,
-                                                  Vector3D viewport_vector);
+                                                  Vector3D ray_direction);
 
 #endif /* SPHERE_H */

@@ -32,14 +32,14 @@ static inline Vector3D canvas_to_viewport(int x, int y, Camera *camera) {
 }
 
 static inline Intersection closest_intersection(Camera *camera, Scene *scene,
-                                                Vector3D viewport_vector) {
-  Intersection result = {.closest_t = camera->max_render_distance,
+                                                Vector3D ray_direction) {
+  Intersection result = {.closest_t = camera->ray_t_max,
                          .closest_sphere = NULL,
                          .hit_sphere = false};
 
   for (int i = 0; i < scene->spheres_count; i++) {
     SphereIntersections sphere_intersections = calculate_sphere_intersection(
-        camera, &scene->spheres[i], viewport_vector);
+        camera, &scene->spheres[i], ray_direction);
 
     if (in_camera_range(*camera, sphere_intersections.t1) &&
         sphere_intersections.t1 < result.closest_t) {
@@ -60,9 +60,9 @@ static inline Intersection closest_intersection(Camera *camera, Scene *scene,
 }
 
 static inline uint32_t trace_ray(Camera *camera, Scene *scene,
-                                 Vector3D viewport_vector) {
+                                 Vector3D ray_direction) {
   Intersection intersection =
-      closest_intersection(camera, scene, viewport_vector);
+      closest_intersection(camera, scene, ray_direction);
 
   if (!intersection.hit_sphere) {
     return scene->default_background_color;
@@ -77,8 +77,15 @@ void main_raytracer(Scene *scene, Camera *camera, uint32_t *framebuffer) {
 
   for (int x = -half_width; x < half_width; x++) {
     for (int y = -half_height; y < half_height; y++) {
-      Vector3D viewport_vector = canvas_to_viewport(x, y, camera);
-      uint32_t color = trace_ray(camera, scene, viewport_vector);
+
+      Vector3D viewport = canvas_to_viewport(x, y, camera);
+
+      Vector3D ray_direction = vector_3d_add(
+          vector_3d_add(vector_3d_multiply_scalar(camera->forward, viewport.z),
+                        vector_3d_multiply_scalar(camera->right, viewport.x)),
+          vector_3d_multiply_scalar(camera->up, viewport.y));
+
+      uint32_t color = trace_ray(camera, scene, ray_direction);
       put_pixel(x, y, color, camera, framebuffer);
     }
   }

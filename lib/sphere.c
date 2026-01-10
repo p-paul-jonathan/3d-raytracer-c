@@ -5,25 +5,27 @@
 
 SphereIntersections calculate_sphere_intersection(Camera *camera,
                                                   Sphere *sphere,
-                                                  Vector3D viewport_vector) {
-  Vector3D camera_to_center_vector =
+                                                  Vector3D ray_direction) {
+  Vector3D origin_to_center =
       vector_3d_subtract(camera->position, sphere->center);
 
-  float a = vector_3d_dot_product(viewport_vector, viewport_vector);
-  float b = vector_3d_dot_product(camera_to_center_vector, viewport_vector) * 2;
-  float c =
-      vector_3d_dot_product(camera_to_center_vector, camera_to_center_vector) -
+  float quadratic_a = vector_3d_dot_product(ray_direction, ray_direction);
+  float quadratic_b =
+      vector_3d_dot_product(origin_to_center, ray_direction) * 2;
+  float quadratic_c =
+      vector_3d_dot_product(origin_to_center, origin_to_center) -
       (sphere->radius * sphere->radius);
 
-  float discriminant = (b * b) - (4 * a * c);
+  float discriminant =
+      (quadratic_b * quadratic_b) - (4 * quadratic_a * quadratic_c);
 
   if (discriminant < 0) {
-    return (SphereIntersections){camera->max_render_distance,
-                                 camera->max_render_distance};
+    return (SphereIntersections){camera->ray_t_max,
+                                 camera->ray_t_max};
   }
 
-  float t1 = (-b + sqrtf(discriminant)) / 2 * a;
-  float t2 = (-b - sqrtf(discriminant)) / 2 * a;
+  float t1 = (-quadratic_b + sqrtf(discriminant)) / 2 * quadratic_a;
+  float t2 = (-quadratic_b - sqrtf(discriminant)) / 2 * quadratic_a;
 
   return (SphereIntersections){t1, t2};
 }

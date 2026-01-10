@@ -4,13 +4,13 @@ SRC    := main.c $(wildcard lib/*.c)
 OBJ    := $(SRC:.c=.o)
 
 # -------- Compiler --------
-CC     := clang
+CC     := gcc
 CFLAGS := -std=c17 -Wall -Wextra -Wpedantic
 INCLUDES := -Ilib
 
 # -------- SDL3 --------
 SDL_CFLAGS := $(shell pkg-config --cflags sdl3)
-SDL_LIBS   := $(shell pkg-config --libs sdl3)
+SDL_LIBS   := $(shell pkg-config --libs sdl3) -lm
 
 # -------- Build --------
 $(TARGET): $(OBJ)
