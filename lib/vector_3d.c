@@ -6,18 +6,18 @@ Vector3D vector_3d_init(float x, float y, float z) {
   return (Vector3D){x, y, z};
 }
 
-Vector3D vector_3d_zero(void) { return (Vector3D){0.0f, 0.0f, 0.0f}; }
+Vector3D vector_3d_zero(void) { return vector_3d_init(0.0f, 0.0f, 0.0f); }
 
 Vector3D vector_3d_add(const Vector3D a, const Vector3D b) {
-  return (Vector3D){a.x + b.x, a.y + b.y, a.z + b.z};
+  return vector_3d_init(a.x + b.x, a.y + b.y, a.z + b.z);
 }
 
 Vector3D vector_3d_subtract(const Vector3D a, const Vector3D b) {
-  return (Vector3D){a.x - b.x, a.y - b.y, a.z - b.z};
+  return vector_3d_init(a.x - b.x, a.y - b.y, a.z - b.z);
 }
 
 Vector3D vector_3d_negate(const Vector3D v) {
-  return (Vector3D){-v.x, -v.y, -v.z};
+  return vector_3d_init(-v.x, -v.y, -v.z);
 }
 
 float vector_3d_dot_product(const Vector3D a, const Vector3D b) {
@@ -25,8 +25,8 @@ float vector_3d_dot_product(const Vector3D a, const Vector3D b) {
 }
 
 Vector3D vector_3d_cross_product(const Vector3D a, const Vector3D b) {
-  return (Vector3D){a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z,
-                    a.x * b.y - a.y * b.x};
+  return vector_3d_init(a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z,
+                        a.x * b.y - a.y * b.x);
 }
 
 bool vector_3d_equal(const Vector3D a, const Vector3D b, float epsilon) {
@@ -43,7 +43,7 @@ float vector_3d_magnitude(const Vector3D v) {
 }
 
 Vector3D vector_3d_multiply_scalar(const Vector3D v, float k) {
-  return (Vector3D){v.x * k, v.y * k, v.z * k};
+  return vector_3d_init(v.x * k, v.y * k, v.z * k);
 }
 
 Vector3D vector_3d_normalize(const Vector3D v) {

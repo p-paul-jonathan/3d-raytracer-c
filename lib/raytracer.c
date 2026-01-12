@@ -26,9 +26,9 @@ static inline void put_pixel(int x, int y, uint32_t color, Camera *camera,
 }
 
 static inline Vector3D canvas_to_viewport(int x, int y, Camera *camera) {
-  return (Vector3D){x * (camera->viewport_width / camera->width),
-                    y * (camera->viewport_height / camera->height),
-                    camera->viewport_distance};
+  return vector_3d_init(x * (camera->viewport_width / camera->width),
+                        y * (camera->viewport_height / camera->height),
+                        camera->viewport_distance);
 }
 
 static inline Intersection closest_intersection(Camera *camera, Scene *scene,

@@ -41,7 +41,7 @@ static void initialize_camera(void) {
     exit(1);
   }
 
-  camera->position = (Vector3D){0.0f, 0.0f, -2.0f};
+  camera->position = vector_3d_init(0.0f, 0.0f, -2.0f);
 
   camera->width = WINDOW_WIDTH;
   camera->height = WINDOW_HEIGHT;
@@ -80,10 +80,10 @@ static void initialize_scene(void) {
     exit(1);
   }
 
-  scene->spheres[0] = (Sphere){(Vector3D){0, -1, 3}, 1, 0xFFFF0000};
-  scene->spheres[1] = (Sphere){(Vector3D){2, 0, 4}, 1, 0xFF0000FF};
-  scene->spheres[2] = (Sphere){(Vector3D){-2, 0, 4}, 1, 0xFF00FF00};
-  scene->spheres[3] = (Sphere){(Vector3D){0, -5001, 0}, 5000, 0xFFFFFF00};
+  scene->spheres[0] = (Sphere){vector_3d_init(0, -1, 3), 1, 0xFFFF0000};
+  scene->spheres[1] = (Sphere){vector_3d_init(2, 0, 4), 1, 0xFF0000FF};
+  scene->spheres[2] = (Sphere){vector_3d_init(-2, 0, 4), 1, 0xFF00FF00};
+  scene->spheres[3] = (Sphere){vector_3d_init(0, -5001, 0), 5000, 0xFFFFFF00};
 
   scene->lights_count = 1;
   scene->lights = malloc(sizeof(Light));
@@ -92,7 +92,7 @@ static void initialize_scene(void) {
     exit(1);
   }
 
-  scene->lights[0] = (Light){0.2f, AMBIENT, (Vector3D){0, 0, 0}};
+  scene->lights[0] = (Light){0.2f, AMBIENT, vector_3d_init(0, 0, 0)};
   scene->default_background_color = DEFAULT_BACKGROUND_COLOR;
 }
 
