@@ -27,6 +27,9 @@ static Scene *scene = NULL;
 
 static uint64_t last_ticks = 0;
 
+static int hd_rendered = false;
+static int show_hd = true;
+
 static inline void clear_framebuffer(uint32_t color) {
   size_t count = (size_t)WINDOW_WIDTH * WINDOW_HEIGHT;
   for (size_t i = 0; i < count; i++) {
@@ -98,31 +101,67 @@ static void initialize_scene(void) {
 
 static void handle_camera_input(Camera *camera, const bool *keys, float move,
                                 float rotate) {
-  if (keys[SDL_SCANCODE_W])
+  if (keys[SDL_SCANCODE_W]) {
     camera_move_front(camera, move);
-  if (keys[SDL_SCANCODE_S])
+    show_hd = false;
+    hd_rendered = false;
+  }
+  if (keys[SDL_SCANCODE_S]) {
     camera_move_back(camera, move);
-  if (keys[SDL_SCANCODE_A])
+    show_hd = false;
+    hd_rendered = false;
+  }
+  if (keys[SDL_SCANCODE_A]) {
     camera_move_left(camera, move);
-  if (keys[SDL_SCANCODE_D])
+    show_hd = false;
+    hd_rendered = false;
+  }
+  if (keys[SDL_SCANCODE_D]) {
     camera_move_right(camera, move);
-  if (keys[SDL_SCANCODE_K])
+    show_hd = false;
+    hd_rendered = false;
+  }
+  if (keys[SDL_SCANCODE_K]) {
     camera_move_up(camera, move);
-  if (keys[SDL_SCANCODE_J])
+    show_hd = false;
+    hd_rendered = false;
+  }
+  if (keys[SDL_SCANCODE_J]) {
     camera_move_down(camera, move);
+    show_hd = false;
+    hd_rendered = false;
+  }
 
-  if (keys[SDL_SCANCODE_UP])
+  if (keys[SDL_SCANCODE_UP]) {
     camera_pitch_up(camera, rotate);
-  if (keys[SDL_SCANCODE_DOWN])
+    show_hd = false;
+    hd_rendered = false;
+  }
+  if (keys[SDL_SCANCODE_DOWN]) {
     camera_pitch_down(camera, rotate);
-  if (keys[SDL_SCANCODE_LEFT])
+    show_hd = false;
+    hd_rendered = false;
+  }
+  if (keys[SDL_SCANCODE_LEFT]) {
     camera_yaw_left(camera, rotate);
-  if (keys[SDL_SCANCODE_RIGHT])
+    show_hd = false;
+    hd_rendered = false;
+  }
+  if (keys[SDL_SCANCODE_RIGHT]) {
     camera_yaw_right(camera, rotate);
-  if (keys[SDL_SCANCODE_Q])
+    show_hd = false;
+    hd_rendered = false;
+  }
+  if (keys[SDL_SCANCODE_Q]) {
     camera_roll_left(camera, rotate);
-  if (keys[SDL_SCANCODE_E])
+    show_hd = false;
+    hd_rendered = false;
+  }
+  if (keys[SDL_SCANCODE_E]) {
     camera_roll_right(camera, rotate);
+    show_hd = false;
+    hd_rendered = false;
+  }
 }
 
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
@@ -175,14 +214,32 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
 
   const bool *keys = SDL_GetKeyboardState(NULL);
 
+  bool moving = keys[SDL_SCANCODE_W] || keys[SDL_SCANCODE_S] ||
+                keys[SDL_SCANCODE_A] || keys[SDL_SCANCODE_D] ||
+                keys[SDL_SCANCODE_K] || keys[SDL_SCANCODE_J] ||
+                keys[SDL_SCANCODE_UP] || keys[SDL_SCANCODE_DOWN] ||
+                keys[SDL_SCANCODE_LEFT] || keys[SDL_SCANCODE_RIGHT] ||
+                keys[SDL_SCANCODE_Q] || keys[SDL_SCANCODE_E];
+
+  if (!moving) {
+    show_hd = true;
+  }
+
   handle_camera_input(camera, keys, camera->move_speed * delta_time,
                       camera->rotate_speed * delta_time);
 
   camera_update_orientation(camera);
 
-  clear_framebuffer(scene->default_background_color);
+  if (!show_hd || !hd_rendered) {
 
-  main_raytracer(scene, camera, framebuffer);
+    clear_framebuffer(scene->default_background_color);
+
+    main_raytracer(scene, camera, framebuffer, !show_hd);
+
+    if (show_hd) {
+      hd_rendered = true;
+    }
+  }
 
   SDL_UpdateTexture(texture, NULL, framebuffer,
                     WINDOW_WIDTH * sizeof(uint32_t));
