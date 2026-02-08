@@ -1,11 +1,13 @@
-#include "./raytracer.h"
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
+
+#include "raytracer.h"
 #include "camera.h"
 #include "scene.h"
 #include "sphere.h"
 #include "vector_3d.h"
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
+#include "vector_color.h"
 
 typedef struct {
   float closest_t;
@@ -13,7 +15,7 @@ typedef struct {
   bool hit_sphere;
 } Intersection;
 
-static inline void put_pixel(int x, int y, uint32_t color, Camera *camera,
+static inline void put_pixel(int x, int y, VectorColor color, Camera *camera,
                              uint32_t *framebuffer) {
   int screen_x = (camera->width / 2) + x;
   int screen_y = (camera->height / 2) - y;
@@ -23,7 +25,7 @@ static inline void put_pixel(int x, int y, uint32_t color, Camera *camera,
     return;
   }
 
-  framebuffer[screen_y * (int)camera->width + screen_x] = color;
+  framebuffer[screen_y * (int)camera->width + screen_x] = vector_color_to_rgb_color(color);
 }
 
 static inline Vector3D canvas_to_viewport(int x, int y, Camera *camera) {
@@ -60,7 +62,7 @@ static inline Intersection closest_intersection(Camera *camera, Scene *scene,
   return result;
 }
 
-static inline uint32_t trace_ray(Camera *camera, Scene *scene,
+static inline VectorColor trace_ray(Camera *camera, Scene *scene,
                                  Vector3D ray_direction) {
   Intersection intersection =
       closest_intersection(camera, scene, ray_direction);
@@ -89,7 +91,7 @@ void main_raytracer(Scene *scene, Camera *camera, uint32_t *framebuffer,
                         vector_3d_multiply_scalar(camera->right, viewport.x)),
           vector_3d_multiply_scalar(camera->up, viewport.y));
 
-      uint32_t color = trace_ray(camera, scene, ray_direction);
+      VectorColor color = trace_ray(camera, scene, ray_direction);
       if (low_resolution) {
         for (int dx = 0; dx < iterator; dx++) {
           for (int dy = 0; dy < iterator; dy++) {

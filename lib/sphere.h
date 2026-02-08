@@ -1,14 +1,16 @@
 #ifndef SPHERE_H
 #define SPHERE_H
 
+#include <stdint.h>
+
 #include "camera.h"
 #include "vector_3d.h"
-#include <stdint.h>
+#include "vector_color.h"
 
 typedef struct {
   Vector3D center;
   float radius;
-  uint32_t color;
+  VectorColor color;
 } Sphere;
 
 typedef struct {

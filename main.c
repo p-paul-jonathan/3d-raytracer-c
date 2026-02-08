@@ -1,3 +1,4 @@
+#include "lib/vector_color.h"
 #define SDL_MAIN_USE_CALLBACKS 1
 
 #include <SDL3/SDL.h>
@@ -30,10 +31,10 @@ static uint64_t last_ticks = 0;
 static int hd_rendered = false;
 static int show_hd = true;
 
-static inline void clear_framebuffer(uint32_t color) {
+static inline void clear_framebuffer(VectorColor color) {
   size_t count = (size_t)WINDOW_WIDTH * WINDOW_HEIGHT;
   for (size_t i = 0; i < count; i++) {
-    framebuffer[i] = color;
+    framebuffer[i] = vector_color_to_rgb_color(color);
   }
 }
 
@@ -83,10 +84,10 @@ static void initialize_scene(void) {
     exit(1);
   }
 
-  scene->spheres[0] = (Sphere){vector_3d_init(0, -1, 3), 1, 0xFFFF0000};
-  scene->spheres[1] = (Sphere){vector_3d_init(2, 0, 4), 1, 0xFF0000FF};
-  scene->spheres[2] = (Sphere){vector_3d_init(-2, 0, 4), 1, 0xFF00FF00};
-  scene->spheres[3] = (Sphere){vector_3d_init(0, -5001, 0), 5000, 0xFFFFFF00};
+  scene->spheres[0] = (Sphere){vector_3d_init(0, -1, 3), 1, vector_color_red()};
+  scene->spheres[1] = (Sphere){vector_3d_init(2, 0, 4), 1, vector_color_blue()};
+  scene->spheres[2] = (Sphere){vector_3d_init(-2, 0, 4), 1, vector_color_green()};
+  scene->spheres[3] = (Sphere){vector_3d_init(0, -5001, 0), 5000, vector_color_yellow()};
 
   scene->lights_count = 1;
   scene->lights = malloc(sizeof(Light));
@@ -96,7 +97,7 @@ static void initialize_scene(void) {
   }
 
   scene->lights[0] = (Light){0.2f, AMBIENT, vector_3d_init(0, 0, 0)};
-  scene->default_background_color = DEFAULT_BACKGROUND_COLOR;
+  scene->default_background_color = vector_color_black();
 }
 
 static void handle_camera_input(Camera *camera, const bool *keys, float move,
