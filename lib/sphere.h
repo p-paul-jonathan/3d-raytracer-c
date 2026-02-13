@@ -12,6 +12,7 @@ typedef struct {
   float radius;
   VectorColor color;
   bool is_light_source;
+  float specular;
 } Sphere;
 
 typedef struct {

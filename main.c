@@ -41,7 +41,7 @@ static inline void clear_framebuffer(VectorColor color) {
 static void initialize_camera(void) {
   camera = malloc(sizeof(Camera));
   if (!camera) {
-    SDL_Log("Out of memory");
+    SDL_Log("Out of memory (Camera)");
     exit(1);
   }
 
@@ -73,38 +73,39 @@ static void initialize_camera(void) {
 static void initialize_scene(void) {
   scene = malloc(sizeof(Scene));
   if (!scene) {
-    SDL_Log("Out of memory");
+    SDL_Log("Out of memory (Scene)");
     exit(1);
   }
 
-  scene->spheres_count = 3;
+  scene->spheres_count = 5;
   scene->spheres = malloc(sizeof(Sphere) * scene->spheres_count);
+
   if (!scene->spheres) {
-    SDL_Log("Out of memory");
+    SDL_Log("Out of memory (Sphere)");
     exit(1);
   }
 
   scene->spheres[0] =
-      (Sphere){vector_3d_init(2, 0, 0), 1, vector_color_red(), false};
+      (Sphere){vector_3d_init(0, -1, 3), 1, vector_color_red(), false, 500};
   scene->spheres[1] =
-      (Sphere){vector_3d_init(2, 0, 4), 1, vector_color_blue(), false};
+      (Sphere){vector_3d_init(2, 0, 4), 1, vector_color_blue(), false, 500};
   scene->spheres[2] =
-      (Sphere){vector_3d_init(0, 0, 0), 0.1, vector_color_white(), true};
-  // scene->spheres[2] =
-  //     (Sphere){vector_3d_init(-2, 0, 4), 1, vector_color_green()};
-  // scene->spheres[3] =
-  //     (Sphere){vector_3d_init(0, -5001, 0), 5000, vector_color_yellow()};
+      (Sphere){vector_3d_init(2, 1, 0), 0.05, vector_color_white(), true, -1};
+  scene->spheres[3] =
+      (Sphere){vector_3d_init(-2, 0, 4), 1, vector_color_green(), false, 500};
+  scene->spheres[4] = (Sphere){vector_3d_init(0, -5001, 0), 5000,
+                               vector_color_yellow(), false, 1000};
 
-  scene->lights_count = 2;
+  scene->lights_count = 3;
   scene->lights = malloc(sizeof(Light) * scene->lights_count);
   if (!scene->lights) {
-    SDL_Log("Out of memory");
+    SDL_Log("Out of memory (Light)");
     exit(1);
   }
 
   scene->lights[0] = (Light){0.2f, AMBIENT, vector_3d_init(0, 0, 0)};
-  scene->lights[1] = (Light){0.8f, POINT, vector_3d_init(0, 0, 0)};
-  // scene->lights[1] = (Light){0.8f, DIRECTIONAL, vector_3d_init(0, 0, 0)};
+  scene->lights[1] = (Light){0.6f, POINT, vector_3d_init(2, 1, 0)};
+  scene->lights[2] = (Light){0.2f, DIRECTIONAL, vector_3d_init(1, 4, 4)};
 
   scene->default_background_color = vector_color_black();
 }
