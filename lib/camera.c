@@ -2,6 +2,7 @@
 
 #include "./camera.h"
 #include "./constants.h"
+#include "vector_3d.h"
 
 bool in_camera_range(Camera camera, float ray_parameter) {
   return camera.ray_t_min <= ray_parameter && camera.ray_t_max >= ray_parameter;
@@ -18,12 +19,12 @@ void camera_move_back(Camera *camera, float amount) {
 }
 
 void camera_move_right(Camera *camera, float amount) {
-  camera->position = vector_3d_add(
+  camera->position = vector_3d_subtract(
       camera->position, vector_3d_multiply_scalar(camera->right, amount));
 }
 
 void camera_move_left(Camera *camera, float amount) {
-  camera->position = vector_3d_subtract(
+  camera->position = vector_3d_add(
       camera->position, vector_3d_multiply_scalar(camera->right, amount));
 }
 
@@ -54,14 +55,6 @@ void camera_pitch_down(Camera *camera, float rotate) {
 }
 
 void camera_yaw_right(Camera *camera, float rotate) {
-  camera->yaw -= rotate;
-
-  if (camera->yaw < -(2 * MATH_PI)) {
-    camera->yaw = 0;
-  }
-}
-
-void camera_yaw_left(Camera *camera, float rotate) {
   camera->yaw += rotate;
 
   if (camera->yaw > 2 * MATH_PI) {
@@ -69,8 +62,16 @@ void camera_yaw_left(Camera *camera, float rotate) {
   }
 }
 
+void camera_yaw_left(Camera *camera, float rotate) {
+  camera->yaw -= rotate;
+
+  if (camera->yaw < -(2 * MATH_PI)) {
+    camera->yaw = 0;
+  }
+}
+
 void camera_roll_left(Camera *camera, float rotate) {
-  camera->roll -= rotate;
+  camera->roll += rotate;
 
   if (camera->roll > camera->roll_range) {
     camera->roll = camera->roll_range;
@@ -78,10 +79,10 @@ void camera_roll_left(Camera *camera, float rotate) {
 }
 
 void camera_roll_right(Camera *camera, float rotate) {
-  camera->roll += rotate;
+  camera->roll -= rotate;
 
-  if (camera->roll > camera->roll_range) {
-    camera->roll = camera->roll_range;
+  if (camera->roll < -camera->roll_range) {
+    camera->roll = -camera->roll_range;
   }
 }
 

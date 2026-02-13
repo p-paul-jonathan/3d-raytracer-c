@@ -45,7 +45,7 @@ static void initialize_camera(void) {
     exit(1);
   }
 
-  camera->position = vector_3d_init(0.0f, 0.0f, -2.0f);
+  camera->position = vector_3d_init(0.0f, 0.0f, -3.0f);
 
   camera->width = WINDOW_WIDTH;
   camera->height = WINDOW_HEIGHT;
@@ -77,26 +77,35 @@ static void initialize_scene(void) {
     exit(1);
   }
 
-  scene->spheres_count = 4;
+  scene->spheres_count = 3;
   scene->spheres = malloc(sizeof(Sphere) * scene->spheres_count);
   if (!scene->spheres) {
     SDL_Log("Out of memory");
     exit(1);
   }
 
-  scene->spheres[0] = (Sphere){vector_3d_init(0, -1, 3), 1, vector_color_red()};
-  scene->spheres[1] = (Sphere){vector_3d_init(2, 0, 4), 1, vector_color_blue()};
-  scene->spheres[2] = (Sphere){vector_3d_init(-2, 0, 4), 1, vector_color_green()};
-  scene->spheres[3] = (Sphere){vector_3d_init(0, -5001, 0), 5000, vector_color_yellow()};
+  scene->spheres[0] =
+      (Sphere){vector_3d_init(2, 0, 0), 1, vector_color_red(), false};
+  scene->spheres[1] =
+      (Sphere){vector_3d_init(2, 0, 4), 1, vector_color_blue(), false};
+  scene->spheres[2] =
+      (Sphere){vector_3d_init(0, 0, 0), 0.1, vector_color_white(), true};
+  // scene->spheres[2] =
+  //     (Sphere){vector_3d_init(-2, 0, 4), 1, vector_color_green()};
+  // scene->spheres[3] =
+  //     (Sphere){vector_3d_init(0, -5001, 0), 5000, vector_color_yellow()};
 
-  scene->lights_count = 1;
-  scene->lights = malloc(sizeof(Light));
+  scene->lights_count = 2;
+  scene->lights = malloc(sizeof(Light) * scene->lights_count);
   if (!scene->lights) {
     SDL_Log("Out of memory");
     exit(1);
   }
 
   scene->lights[0] = (Light){0.2f, AMBIENT, vector_3d_init(0, 0, 0)};
+  scene->lights[1] = (Light){0.8f, POINT, vector_3d_init(0, 0, 0)};
+  // scene->lights[1] = (Light){0.8f, DIRECTIONAL, vector_3d_init(0, 0, 0)};
+
   scene->default_background_color = vector_color_black();
 }
 

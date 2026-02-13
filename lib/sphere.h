@@ -11,6 +11,7 @@ typedef struct {
   Vector3D center;
   float radius;
   VectorColor color;
+  bool is_light_source;
 } Sphere;
 
 typedef struct {

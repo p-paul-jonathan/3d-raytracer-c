@@ -52,8 +52,7 @@ VectorColor vector_color_clamp(VectorColor v) {
 }
 
 VectorColor vector_color_multiply_scalar(VectorColor a, float k) {
-  return vector_color_clamp(
-      vector_color_init(a.red * k, a.green * k, a.blue * k));
+  return vector_color_init(a.red * k, a.green * k, a.blue * k);
 }
 
 uint32_t vector_color_to_rgb_color(VectorColor v) {
